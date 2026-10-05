@@ -23,8 +23,8 @@ final class StateStore {
 
     let loadOutcome: JSONFileStore<AppState>.Outcome
 
-    init() {
-        let store = (try? JSONFileStore<AppState>.inApplicationSupport("state.json"))
+    init(store: JSONFileStore<AppState>? = nil) {
+        let store = store ?? (try? JSONFileStore<AppState>.inApplicationSupport("state.json"))
             ?? JSONFileStore<AppState>(
                 url: URL(fileURLWithPath: NSHomeDirectory())
                     .appendingPathComponent("Library/Application Support/Pane/state.json")
@@ -83,8 +83,8 @@ final class SettingsStore {
         store.url.deletingLastPathComponent().appendingPathComponent("Themes")
     }
 
-    init() {
-        let store = (try? JSONFileStore<Settings>.inApplicationSupport("settings.json"))
+    init(store: JSONFileStore<Settings>? = nil) {
+        let store = store ?? (try? JSONFileStore<Settings>.inApplicationSupport("settings.json"))
             ?? JSONFileStore<Settings>(
                 url: URL(fileURLWithPath: NSHomeDirectory())
                     .appendingPathComponent("Library/Application Support/Pane/settings.json")

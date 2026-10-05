@@ -292,6 +292,7 @@ public struct Settings: Codable, Equatable, Sendable {
     /// thought, that does not come along when you switch to something else. Decision 33 is not
     /// reversed by this: its complaint was that Space behaviour was a *side effect of pinning*, not
     /// that either behaviour was wrong. This is the explicit control it was asking for.
+    /// In the local build, on also hides the pane on focus loss; off keeps it open on its Space.
     public var showOnEverySpace: Bool
 
     /// Whether Pane asks GitHub, about once a day on summon, whether a newer release exists.

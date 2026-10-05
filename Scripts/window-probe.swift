@@ -29,6 +29,7 @@ struct WindowProbe {
         }
         Task { @MainActor in
             await run()
+            await runFocusLossChecks()
             print("\(failures == 0 ? "✓" : "✗") \(checked) native window assertions, \(failures) failures")
             exit(failures == 0 ? 0 : 1)
         }

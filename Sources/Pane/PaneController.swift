@@ -364,6 +364,18 @@ final class PaneController: NSObject {
         if NSApp.isActive { NSApp.deactivate() }
     }
 
+    /// Keep on This Space is the exception: an ordinary pane goes away when focus leaves it.
+    /// Re-check after the current event so menu tracking and summoning can restore key status.
+    private func dismissIfUnfocused() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.settings.value.showOnEverySpace,
+                self.panel.isSummoned, !self.panel.isKeyWindow
+            else { return }
+            self.dismiss()
+            self.state.save()
+        }
+    }
+
     private func rememberFrame() {
         // **`panel.screen` only — never `NSScreen.main` as a fallback.** `main` is "the screen with
         // the key window", which during a display wake is whichever monitor came back first, so a
@@ -1392,6 +1404,7 @@ final class PaneController: NSObject {
         // *content* a setting changes. An open list would otherwise keep the old order until it was
         // closed and reopened, which reads as the setting not having taken.
         if switcherIsOpen { sendRows(query: lastQuery) }
+        dismissIfUnfocused()
     }
 
     // MARK: - Hide from Screen Capture
@@ -1870,5 +1883,6 @@ extension PaneController: NSWindowDelegate {
         // half-typed thought must already be on disk.
         flush(trigger: .lostFocus)
         state.save()
+        dismissIfUnfocused()
     }
 }
