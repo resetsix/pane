@@ -1073,6 +1073,47 @@ export function runFooterCount(view, doc) {
   press();
   check("and the editor still has focus", true, view.hasFocus);
 
+  for (const [name, text, words] of [
+    ["Chinese without spaces", "你好世界\n", 2],
+    ["mixed Chinese and English", "你好，world!\n", 2],
+    ["punctuation separates English words", "hello,world\n", 2],
+    ["standalone numbers", "123 456\n", 2],
+    ["a decimal number", "3.14\n", 1],
+    ["non-Latin digits", "١٢٣\n", 1],
+    ["apostrophes stay inside a word", "don't stop\n", 2],
+    ["punctuation and emoji are not words", "？！ 👨‍👩‍👧‍👦\n", 0],
+    ["the title is included once", "Title\nbody\n", 2],
+    ["formatting is not counted", "## **Hello** world\n", 2],
+    ["link destinations are not counted", "[hello world](https://example.com/a)\n", 2],
+    ["code contents are included", "```js\nhello world\n```\n", 2],
+    ["IP addresses and port numbers", "Server IPs + ports\nprod 10.0.4.12\nstaging 10.0.7.3\ngrafana :3000\n", 9],
+    ["an empty note", "", 0],
+  ]) {
+    set(text);
+    check(name, `${words} ${words === 1 ? "word" : "words"}`, el.textContent);
+  }
+
+  press();
+  for (const [name, text, characters] of [
+    ["Chinese characters", "你好世界\n", 4],
+    ["a combining accent", "e\u0301\n", 1],
+    ["a family emoji", "👨‍👩‍👧‍👦\n", 1],
+    ["a flag emoji", "🇨🇳\n", 1],
+    ["an emoji skin tone", "👍🏽\n", 1],
+    ["an emoji variation selector", "❤️\n", 1],
+    ["mixed text and emoji", "你好，world! 👨‍👩‍👧‍👦\n", 11],
+    ["spaces are included", "one two\n", 7],
+    ["paragraph breaks are excluded", "one\n\nthree\n", 8],
+    ["formatting does not add visible characters", "**e\u0301**\n", 1],
+    ["an empty note has no characters", "", 0],
+  ]) {
+    set(text);
+    check(name, `${characters} ${characters === 1 ? "character" : "characters"}`, el.textContent);
+  }
+  window.paneHost.loadNote("count-test.md", "a\r\nb\r\n", 0, false);
+  check("CRLF line breaks are excluded too", "2 characters", el.textContent);
+  press();
+
   return { checked, failures };
 }
 

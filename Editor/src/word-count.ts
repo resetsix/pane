@@ -1,20 +1,13 @@
 /*
  * The number in the footer.
  *
- * Counted over the *rendered* text rather than the raw source, so markdown punctuation does not
- * inflate it, and a token only counts if it contains a letter or a digit. That rule was chosen to
- * match the one case in the design that can actually be checked — frame 1d's "Server IPs + ports"
- * note, which reads:
- *
- *     Server IPs + ports
- *     prod    10.0.4.12
- *     staging 10.0.7.3
- *     grafana :3000
- *
- * and is labelled **9 words**. Ten whitespace-separated tokens, of which the bare "+" has no
- * alphanumeric and does not count. The design's other counts are illustrative rather than computed,
- * so this is the only one worth fitting.
+ * Counts include the first-line title. Intl.Segmenter supplies language-aware word boundaries and
+ * visible-character boundaries, so Chinese does not need spaces and a combined emoji counts once.
+ * Safari 17, the minimum WebKit target, supports it natively. Reuse the segmenters while typing.
  */
+
+const wordSegmenter = new Intl.Segmenter(undefined, { granularity: "word" });
+const characterSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 /** Strips the markdown that would otherwise be counted as words. */
 function toPlainText(markdown: string): string {
@@ -50,15 +43,17 @@ function toPlainText(markdown: string): string {
  * structure rather than text, and a note broken into more paragraphs is not a longer one.
  */
 export function countCharacters(markdown: string): number {
-  return [...toPlainText(markdown).replace(/\n/g, "")].length;
+  const plain = toPlainText(markdown).replace(/[\r\n]/g, "");
+  return Array.from(characterSegmenter.segment(plain)).length;
 }
 
 export function countWords(markdown: string): number {
   const plain = toPlainText(markdown);
   let count = 0;
-  for (const token of plain.split(/\s+/)) {
-    // `\p{L}` and `\p{N}` rather than [A-Za-z0-9]: a note written in Chinese or Greek has words too.
-    if (token && /[\p{L}\p{N}]/u.test(token)) count++;
+  for (const segment of wordSegmenter.segment(plain)) {
+    // Some WebKit versions mark numeric segments as non-word-like. Keep counting numbers,
+    // including IP addresses and ports, using the boundaries Segmenter already supplied.
+    if (segment.isWordLike || /\p{N}/u.test(segment.segment)) count++;
   }
   return count;
 }
