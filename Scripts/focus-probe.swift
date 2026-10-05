@@ -41,12 +41,16 @@ extension WindowProbe {
                 vault.drain()
             }
 
-            for _ in 0..<40 {
+            // A fresh CI runner may need several seconds to start the WebContent process.
+            for _ in 0..<160 {
                 if controller.currentFilename == filename { break }
                 try? await Task.sleep(nanoseconds: 50_000_000)
             }
-            check(controller.currentFilename == filename,
-                  "focus tests load only their temporary note")
+            guard controller.currentFilename == filename else {
+                check(false, "focus tests load only their temporary note")
+                return
+            }
+            check(true, "focus tests load only their temporary note")
 
             controller.summon()
             await settle()

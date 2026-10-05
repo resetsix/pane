@@ -23,7 +23,7 @@ struct WindowProbe {
     static func main() {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 20) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 40) {
             print("window-probe: timed out")
             exit(2)
         }
